@@ -1,0 +1,3 @@
+numpy==1.18.3
+Pillow==7.1.2
+opencl==2020.1

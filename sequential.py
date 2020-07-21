@@ -3,6 +3,7 @@
 import numpy
 import sys
 import math
+import time
 import pyopencl as cl
 from PIL import Image
 
@@ -67,62 +68,70 @@ def sobel_y_derivative():
 ##################
 # OPENCL         #
 ##################
+def main():
+    # Create a list of all the platform IDs
+    platforms = cl.get_platforms()
 
-# Create a list of all the platform IDs
-platforms = cl.get_platforms()
+    kernel = open("kernel.cl").read()
+    img = Image.open(sys.argv[1])
+    img_arr = numpy.asarray(img).astype(numpy.uint8)
 
-kernel = open("kernel.cl").read()
-img = Image.open(sys.argv[1])
-img_arr = numpy.asarray(img).astype(numpy.uint8)
+    img_gray = convert_to_grayscale(img_arr)
 
-img_gray = convert_to_grayscale(img_arr)
+    (height, width, channels) = img_arr.shape
+    img_src = img_gray.reshape((height * width))
+    (kernel_height, kernel_weight) = sobel_x_derivative().shape
 
-(height, width, channels) = img_arr.shape
-img_src = img_gray.reshape((height * width))
-(kernel_height, kernel_weight) = sobel_x_derivative().shape
+    #print("-- Iamge Size --")
+    image_size = height * width
+    #print(image_size)
+    #print("--- ---")
 
-#print("-- Iamge Size --")
-image_size = height * width
-#print(image_size)
-#print("--- ---")
+    # Step 1: Create a context.
+    context = cl.create_some_context()
 
-# Step 1: Create a context.
-context = cl.create_some_context()
+    # Create a queue to the device.
+    queue = cl.CommandQueue(context)
 
-# Create a queue to the device.
-queue = cl.CommandQueue(context)
+    # Create the program.
+    program = cl.Program(context, kernel).build()
 
-# Create the program.
-program = cl.Program(context, kernel).build()
+    h_source = img_src
+    h_sobel_x = sobel_x_derivative()
+    h_sobel_y = sobel_y_derivative()
 
-h_source = img_src
-h_sobel_x = sobel_x_derivative()
-h_sobel_y = sobel_y_derivative()
+    h_out = numpy.empty(image_size).astype(numpy.int32)
 
-h_out = numpy.empty(image_size).astype(numpy.int32)
+    d_src = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_source)
+    d_sobel_x = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_sobel_x)
+    d_sobel_y = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_sobel_y)
 
-d_src = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_source)
-d_sobel_x = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_sobel_x)
-d_sobel_y = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_sobel_y)
+    # Create the memory on the device to put the result into.
+    d_out = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, h_out.nbytes)
 
-# Create the memory on the device to put the result into.
-d_out = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, h_out.nbytes)
+    sobel = program.sobel
 
-sobel = program.sobel
+    sobel.set_scalar_arg_dtypes([numpy.int32, numpy.int32, numpy.int32, numpy.int32, None, None, None, None])
 
-sobel.set_scalar_arg_dtypes([numpy.int32, numpy.int32, numpy.int32, numpy.int32, None, None, None, None])
+    sobel(queue, (height, width), None, height, width, kernel_height, kernel_weight, d_src, d_sobel_x, d_sobel_y, d_out)
 
-sobel(queue, (height, width), None, height, width, kernel_height, kernel_weight, d_src, d_sobel_x, d_sobel_y, d_out)
+    queue.finish()
 
-queue.finish()
+    cl.enqueue_copy(queue, h_out, d_out)
 
-cl.enqueue_copy(queue, h_out, d_out)
+    # Let us reshape
+    reshaped = h_out.reshape((height, width))
 
-# Let us reshape
-reshaped = h_out.reshape((height, width))
+    #save_image(h_out, "output_cl.png", "L")
 
-print(reshaped)
-#save_image(h_out, "output_cl.png", "L")
-completedImg = Image.fromarray(reshaped, 'L')
-completedImg.show()
-#save_image(completedImg, "output_cl.png")
+    #OLD
+    #completedImg = Image.fromarray(reshaped, 'L')
+    #NEW 
+    completedImg = Image.fromarray(reshaped.astype(numpy.uint8), 'L')
+    completedImg.show()
+    #save_image(completedImg, "output_cl.png")
+
+    
+start_time = time.time()
+main()
+print("Execution time: %s seconds" % (time.time() - start_time))

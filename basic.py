@@ -101,7 +101,6 @@ def single_sobel(img, kernel):
             img_out[i_row, i_col] = math.ceil(math.sqrt((pixel_x * pixel_x) + (pixel_y * pixel_y)))
     return img_out
 
-
 def apply_kernel(img, kernel):
     (kernel_height, kernel_width) = kernel.shape
     (img_height, img_width) = img.shape

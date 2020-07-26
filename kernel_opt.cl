@@ -2,14 +2,19 @@ __kernel void sobel(const int img_height, const int img_width, const int kernel_
                     __global int *sobel_x, __global int *sobel_y, __global int *dst) {
   
     int i = get_global_id(0);
+    int j = 0;
+    int k_row = 0;
+    int k_col = 0;
+    int k = 0;
 
     int minBoundry = 0;
 
-    for(int j=0; j<img_width; j++) {
+    // Multiply one row at the same time. 
+    for(j=0; j<img_width; j++) {
         float pixelX = 0;
         float pixelY = 0;
-        for (int k_row = 0; k_row < kernel_n; k_row++) {
-            for(int k_col = 0; k_col < kernel_n; k_col++) {
+        for (k_row = 0; k_row < kernel_n; k_row++) {
+            for(k_col = 0; k_col < kernel_n; k_col++) {
                 int offset_row = (-1 + k_row);
                 int offset_col = (-1 + k_col);
 

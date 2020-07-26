@@ -80,7 +80,7 @@ def main():
 
     (height, width, channels) = img_arr.shape
     img_src = img_gray.reshape((height * width))
-    (kernel_height, kernel_weight) = sobel_x_derivative().shape
+    (kernel_height, _kernel_weight) = sobel_x_derivative().shape
     kernel_n = kernel_height
 
     #print("-- Iamge Size --")

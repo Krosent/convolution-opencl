@@ -128,6 +128,7 @@ def main():
     #completedImg = Image.fromarray(reshaped, 'L')
     #NEW 
     completedImg = Image.fromarray(reshaped.astype(numpy.uint8), 'L')
+    #save_image(reshaped, "output_cl.png", "L")
     completedImg.show()
     #save_image(completedImg, "output_cl.png")
 

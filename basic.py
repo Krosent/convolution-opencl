@@ -78,14 +78,25 @@ def single_sobel(img, kernel):
     sobel_x = sobel_x_derivative()
     sobel_y = sobel_y_derivative()
 
-    for i_row in range(1, img_height - 2):
-        for i_col in range(1, img_width - 2):
+    for i_row in range(0, img_height):
+        for i_col in range(0, img_width):
             pixel_x = 0
             pixel_y = 0
             for k_row in range(0, kernel_height):  # Range is an open-ended interval!
                 for k_col in range(0, kernel_width):
-                    pixel_x += sobel_x[k_row][k_col] * img[i_row + -1 + k_row][i_col + -1 + k_col]
-                    pixel_y += sobel_y[k_row][k_col] * img[i_row + -1 + k_row][i_col + -1 + k_col]
+                    valueX = (i_row + -1 + k_row)
+                    valueY = (i_col + -1 + k_col)
+                    
+                    if (valueX >= img_height):
+                        diff = valueX - img_height
+                        valueX = img_height - diff - 1
+
+                    if (valueY >= img_width): 
+                        diff = valueY - img_width
+                        valueY = img_width - diff - 1 
+
+                    pixel_x += sobel_x[k_row][k_col] * img[valueX][valueY]
+                    pixel_y += sobel_y[k_row][k_col] * img[valueX][valueY]
 
             img_out[i_row, i_col] = math.ceil(math.sqrt((pixel_x * pixel_x) + (pixel_y * pixel_y)))
     return img_out
@@ -144,7 +155,7 @@ def main():
     img_sobel_x = apply_kernel(img_gray, sobel_x_derivative())
     img_sobel_y = apply_kernel(img_gray, sobel_y_derivative())
     img_sobel_multi = merge_sobel(img_sobel_x, img_sobel_y, img_sobel)
-    completedImg = Image.fromarray(img_sobel_multi.astype(numpy.uint8), 'L')
+    completedImg = Image.fromarray(img_sobel.astype(numpy.uint8), 'L')
     completedImg.show()
 
 

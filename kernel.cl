@@ -18,8 +18,8 @@ __kernel void sobel(const int img_height, const int img_width, const int kernel_
             int offset_col_mod = modulo(offset_col,3);
 
             // Or we can just multiple offsets by -1 to handle by mirror method
-            //int offset_row = (-1 + k_row) * -1;
-            //int offset_col = (-1 + k_col) * -1;
+            //int offset_row = (-1 + k_row);
+            //int offset_col = (-1 + k_col);
 
             // I will stick with the first solution in final code.
             

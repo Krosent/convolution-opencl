@@ -97,8 +97,8 @@ def main():
     program = cl.Program(context, kernel).build()
 
     h_source = img_src
-    h_sobel_x = sobel_x_derivative()
-    h_sobel_y = sobel_y_derivative()
+    h_sobel_x = sobel_x_derivative().astype(numpy.int32)
+    h_sobel_y = sobel_y_derivative().astype(numpy.int32)
 
     h_out = numpy.empty(image_size).astype(numpy.int32)
 

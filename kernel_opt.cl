@@ -5,7 +5,6 @@ __kernel void sobel(const int img_height, const int img_width, const int kernel_
     int j = 0;
     int k_row = 0;
     int k_col = 0;
-    int k = 0;
 
     int minBoundry = 0;
 
